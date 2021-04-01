@@ -18,7 +18,7 @@ import logging
 logger = logging.getLogger(os.path.basename(sys.argv[0]))
 
 
-def parse(path) -> List[Dict[str, Any]]:
+def parse(path: str) -> List[Dict[str, Any]]:
     logger.debug(f'Processing {path} ..')
     with gzip.open(path, 'r') as f:
         content = f.read()
@@ -31,7 +31,10 @@ def parse(path) -> List[Dict[str, Any]]:
         at = a.getElementsByTagName("ArticleTitle")[0]
         at_text = at.firstChild
         if at_text is not None:
-            entry['title'] = at_text.data
+            if hasattr(at_text, 'data'):
+                entry['title'] = at_text.data
+            else:
+                print('at_text has no data', path)
         ab_lst = a.getElementsByTagName("AbstractText")
         abstract_lst = []
         for ab in ab_lst:
@@ -39,8 +42,11 @@ def parse(path) -> List[Dict[str, Any]]:
             ab_label = ab.getAttribute('Label')
             ab_nlm_category = ab.getAttribute('NlmCategory')
             abstract = {}
-            if ab_text is not None and len(ab_text.data) > 0:
-                abstract['text'] = ab_text.data
+            if ab_text is not None:
+                if hasattr(ab_text, 'data'):
+                    abstract['text'] = ab_text.data
+                else:
+                    print('ab_text has no data', path)
             if ab_label is not None and len(ab_label) > 0:
                 abstract['label'] = ab_label
             if ab_nlm_category is not None and len(ab_nlm_category) > 0:
