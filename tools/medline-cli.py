@@ -69,7 +69,7 @@ def main(argv):
     args = parser.parse_args(argv)
 
     jsonl_path = args.jsonl
-    text_path = args.jsonl
+    text_path = args.text
 
     with ProcessPoolExecutor(max_workers=args.threads) as e:
         entry_lst = [entry for el in list(tqdm(e.map(parse, args.paths), total=len(args.paths))) for entry in el]
