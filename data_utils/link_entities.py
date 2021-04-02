@@ -14,7 +14,6 @@ logger = logging.getLogger(__name__)
 
 
 class ExactEntityLinking:
-    
     def __init__(self, entities, case_sensitive=True):
         self.linker = KeywordProcessor(case_sensitive=case_sensitive)
         
@@ -51,7 +50,7 @@ class ExactEntityLinking:
         if skip:
             return
         
-        text2span = {matches_texts[i]:spans[i] for i in range(len(spans))}
+        text2span = {matches_texts[i]: spans[i] for i in range(len(spans))}
         
         return text2span
 
@@ -76,11 +75,12 @@ def link_sentences(linker, sents_fname, output_fname):
             wf.write(json.dumps(jdata) + "\n")
     
     t = (time.time() - t) // 60
-    logger.info("Took %d mins (%d sents / min)" % (t, (idx+1)/t))
+    logger.info("Took %d mins" % t)
 
 
 if __name__=="__main__":
     with open(config.umls_vocab_file, "rb") as rf:
         uv = pickle.load(rf)
-    linker = ExactEntityLinking(uv.entity_text_to_cuis.keys(), config.case_sensitive_linker)
+    # linker = ExactEntityLinking(uv.entity_text_to_cuis.keys(), config.case_sensitive_linker)
+    linker = ExactEntityLinking(uv[2]["entity_text_to_cuis"].keys(), config.case_sensitive_linker)
     link_sentences(linker, config.medline_unique_sents_file, config.medline_linked_sents_file)
