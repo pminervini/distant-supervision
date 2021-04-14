@@ -58,7 +58,7 @@ max_seq_length = 128
 SEED = 2019
 
 # Models
-pretrained_model_dir = "path/to/pretrained/biobert/biobert_v1.1_pubmed" # OR any other BERT like model
+pretrained_model_dir = "monologg/biobert_v1.1_pubmed" # OR any other BERT like model
 do_lower_case = False
 
 # Features files
