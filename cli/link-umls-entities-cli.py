@@ -13,7 +13,7 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 logger = logging.getLogger(__name__)
 
 
-def link_sentences(linker, sents_fname, output_fname):
+def link_sentences(linker: ExactEntityLinking, sents_fname: str, output_fname: str):
     t = time.time()
     
     with open(sents_fname, encoding="utf-8", errors="ignore") as rf, open(output_fname, "w", encoding="utf-8", errors="ignore") as wf:
@@ -42,4 +42,5 @@ if __name__ == "__main__":
 
     # linker = ExactEntityLinking(uv.entity_text_to_cuis.keys(), config.case_sensitive_linker)
     linker = ExactEntityLinking(uv[2]["entity_text_to_cuis"].keys(), config.case_sensitive_linker)
+
     link_sentences(linker, config.medline_unique_sents_file, config.medline_linked_sents_file)

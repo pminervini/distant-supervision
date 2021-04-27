@@ -2,13 +2,14 @@
 
 import json
 
+from typing import Dict, Generator, Tuple, Any
+
 
 class JsonlReader:
-    
-    def __init__(self, fname):
+    def __init__(self, fname: str):
         self.fname = fname
     
-    def __iter__(self):
+    def __iter__(self) -> Generator[Any, None, None]:
         with open(self.fname, encoding="utf-8", errors="ignore") as rf:
             for jsonl in rf:
                 jsonl = jsonl.strip()
@@ -18,11 +19,10 @@ class JsonlReader:
 
 
 class TriplesReader:
-    
-    def __init__(self, fname):
+    def __init__(self, fname: str):
         self.fname = fname
     
-    def __iter__(self):
+    def __iter__(self) -> Generator[Tuple[str, str, str], None, None]:
         with open(self.fname, encoding="utf-8", errors="ignore") as rf:
             for tsvl in rf:
                 tsvl = tsvl.strip()
@@ -31,7 +31,7 @@ class TriplesReader:
                 yield tsvl.split("\t")
 
 
-def read_relations(relations_file, with_dir=False):
+def read_relations(relations_file: str, with_dir: bool = False) -> Dict[str, int]:
     relation2idx = dict()
     idx = 0
     with open(relations_file) as rf:
@@ -50,7 +50,7 @@ def read_relations(relations_file, with_dir=False):
     return relation2idx
 
 
-def read_entities(entities_file):
+def read_entities(entities_file) -> Dict[str, int]:
     entity2idx = dict()
     idx = 0
     with open(entities_file) as rf:

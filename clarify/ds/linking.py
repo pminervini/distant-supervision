@@ -6,16 +6,17 @@ import time
 
 from flashtext import KeywordProcessor
 
+from typing import Iterable
+
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 class ExactEntityLinking:
-    def __init__(self, entities, case_sensitive=True):
+    def __init__(self, entities: Iterable[str], case_sensitive: bool = True):
         self.linker = KeywordProcessor(case_sensitive=case_sensitive)
 
-        logger.info("Building Trie data structure with flashText for exact match entity linking (|E|={}) ...".format(
-            len(entities)))
+        logger.info("Building Trie data structure with flashText for exact match entity linking (|E|={}) ...".format(len(entities)))
 
         t = time.time()
         self.linker.add_keywords_from_list(list(set(entities)))
@@ -23,7 +24,7 @@ class ExactEntityLinking:
 
         logger.info("Took %d mins" % t)
 
-    def link(self, text):
+    def link(self, text: str):
         spans = sorted(
             [(start_span, end_span) for _, start_span, end_span in self.linker.extract_keywords(text, span_info=True)],
             key=lambda span: span[0])
