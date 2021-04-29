@@ -6,7 +6,7 @@ import sys
 import argparse
 import gzip
 from xml.dom import minidom
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
 import multiprocessing
 from tqdm import tqdm
 import jsonlines

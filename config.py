@@ -10,9 +10,14 @@ mrrel_file = os.path.join(UMLS_DIR, "MRREL.RRF")
 mrconso_file = os.path.join(UMLS_DIR, "MRCONSO.RRF")
 medline_file = os.path.join(MEDLINE_DIR, "medline_abs.txt")
 medline_unique_sents_file = os.path.join(MEDLINE_DIR, "medline_unique_sentences.txt")
+
 medline_linked_sents_file = os.path.join(MEDLINE_DIR, "umls_linked_sentences.jsonl")
+drugbank_medline_linked_sents_file = os.path.join(MEDLINE_DIR, "drugbank_linked_sentences.jsonl")
+
 groups_linked_sents_file = os.path.join(MEDLINE_DIR, "linked_sentences_to_groups.jsonl")
+
 umls_vocab_file = os.path.join("data", "umls_vocab.pkl")
+drugbank_vocab_file = os.path.join("data", "drugbank_vocab.pkl")
 
 # Main configurations
 entity_pool = True # True to use average of sub-words, False for only first sub-token (can only be used with special tokens)

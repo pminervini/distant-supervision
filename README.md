@@ -10,15 +10,23 @@ Install the UMLS tools by following the steps [here](http://blog.appliedinformat
 Download MEDLINE abstracts `medline_abs.txt` (~24.5GB) and place under `data/MEDLINE`.
 
 ##### Data Creation
-1. From project base dir, call the script to process UMLS as: `python -m data_utils.process_umls`. This will create an object `data/umls_vocab.pkl`.
-2. Next, run the script `python -m data_utils.extract_unique_sentences_medline`. This might take a while. This will create a file `data/MEDLINE/medline_unique_sentences.txt`.
-3. Link the entities with texts: `python -m data_utils.link_entities` (see `config.py` to adjust linking settings).
+1. Process UMLS: `python3 cli/generate-umls-vocab-cli.py`
+   - This will create `data/umls_vocab.pkl`.
+2. Run `python3 cli/extract-sentences-medline-cli.py`.
+   - This will create `data/MEDLINE/medline_unique_sentences.txt`.
+3. Link entities with text: `python3 -m cli/link-umls-entities-cli.py`
 
 ##### Data Splits
-To reproduce the data splits used reported in the paper for `k-tag` setting, run wit default options as `python -m data_utils.create_split`. This will take a while for the first time because of generating the one time file `data/MEDLINE/linked_sentences_to_groups.jsonl`. For next runs, it will use the cached version. For `s-tag`, set the flag `k_tag=False` in `config.py`. For `s-tag+exprels`, additionally set the flag `expand_rels=True`.
+To generate the data splits for the `k-tag` setting, run wit default options as `python3 ./cli/create-splits-cli.py`.
+This will take a while for the first time because of generating the one time file `data/MEDLINE/linked_sentences_to_groups.jsonl`.
+For next runs, it will use the cached version.
+
+For `s-tag`, set the flag `k_tag=False` in `config.py`.
+
+For `s-tag+exprels`, additionally set the flag `expand_rels=True`.
 
 ## Features
-Run `python -m data_utils.features`. Running the job with multi-processing will be significantly faster.
+Run `python3 ./cli/create-features-cli.py`. Running the job with multi-processing will be significantly faster.
 
 ## Train
-Run `python train.py`.
+Run `python3 cli/train-cli.py`.
