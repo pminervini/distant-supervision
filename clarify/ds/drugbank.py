@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 class DrugBankVocab:
-    """Class to hold UMLS entities, relations and their triples.
+    """Class to hold BioKG/DrugBank entities, relations and their triples.
 
     """
     def __init__(self):
@@ -19,7 +19,7 @@ class DrugBankVocab:
         self.db_ddi_path = 'drugbank/db_ddi.txt'
 
     def build(self):
-        """Parses UMLS MRREL.RRF and MRCONSO.RRF files to build mappings between
+        """Parses drugbank/db_meta.txt and drugbank/db_ddi.txt files to build mappings between
         entities, their texts and relations.
 
         """

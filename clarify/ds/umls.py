@@ -6,11 +6,13 @@ import pickle
 
 from nltk.corpus import stopwords
 
+from typing import Iterator, Tuple
+
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def iter_from_mrrel(mrrel_file, ro_only=False):
+def iter_from_mrrel(mrrel_file: str, ro_only=False) -> Iterator[Tuple[str, Tuple[str, str], str], None, None]:
     """Reads UMLS relation triples file MRREL.RRF.
 
     Use ``ro_only`` to consider relations of "RO" semantic type only.
@@ -26,7 +28,8 @@ def iter_from_mrrel(mrrel_file, ro_only=False):
             if not line:
                 continue
 
-            # Each line is as such: C0012792|A24166664|SCUI|RO|C0026827|A0088733|SCUI|induced_by|R176819430||MED-RT|MED-RT||N|N||
+            # Each line is as such:
+            # C0012792|A24166664|SCUI|RO|C0026827|A0088733|SCUI|induced_by|R176819430||MED-RT|MED-RT||N|N||
             line = line.split("|")
 
             # Consider relations of 'RO' type only
@@ -45,7 +48,7 @@ def iter_from_mrrel(mrrel_file, ro_only=False):
             yield e1_id, (rel_id, rel_text), e2_id
 
 
-def iter_from_mrconso(mrconso_file, en_only=False):
+def iter_from_mrconso(mrconso_file: str, en_only: bool = False) -> Iterator[Tuple[str, str], None, None]:
     """Reads UMLS concept names file MRCONSO.RRF.
 
     Use ``en_only`` to read English concepts only.

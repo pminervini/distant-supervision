@@ -7,7 +7,7 @@ To run the code, please obtain the data as follows:
 Install the UMLS tools by following the steps [here](http://blog.appliedinformaticsinc.com/getting-started-with-metamorphosys-the-umls-installation-tool/). Once installed, under `INSTALLED_DIR/2019AB/META`, you can find `MRREL.RRF` and `MRCONSO.RRF`, copy the files and place under `data/UMLS`.
 
 ##### MEDLINE
-Download MEDLINE abstracts `medline_abs.txt` (~24.5GB) and place under `data/MEDLINE`.
+Download MEDLINE abstracts `medline_abs.txt` (~25GB) and place under `data/MEDLINE`.
 
 ##### Data Creation
 1. Process UMLS: `python3 cli/generate-umls-vocab-cli.py`
