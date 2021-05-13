@@ -1,24 +1,7 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import torch
-
-# ------------------------------------------------------
-# Work arounds to errors mentioned here:
-# https://github.com/pytorch/pytorch/issues/973
-
-torch.multiprocessing.set_sharing_strategy('file_system')
-
-import resource
-
-rlimit = resource.getrlimit(resource.RLIMIT_NOFILE)
-resource.setrlimit(resource.RLIMIT_NOFILE, (2048, rlimit[1]))
-
-# FIXME: These fixes are not stable and may or may not
-# work. The num of worker and chunksize influence it
-# as well (somehow!). One can just remove it altogether
-# and create features serially (much slower but stable).
-
-# -------------------------------------------------------
 
 import logging
 import config
@@ -27,14 +10,16 @@ import copy
 
 from transformers import BertTokenizer
 from concurrent.futures import ProcessPoolExecutor
-from data_utils import JsonlReader, read_entities, read_relations
+from clarify.utils import JsonlReader, read_entities, read_relations
+
+from typing import Dict, Tuple
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def tokenize_jsonl(jsonl, tokenizer, entity2idx, relation2idx, max_seq_length=128, 
-                   e1_tok="$", e2_tok="^", entity_start=False):
+def tokenize_jsonl(jsonl: Dict[str, Tuple[str, str]], tokenizer, entity2idx, relation2idx, max_seq_length=128,
+                   e1_tok: str = "$", e2_tok: str = "^", entity_start: bool = False):
     # Group
     src, tgt = jsonl["group"]
     relation = jsonl["relation"]
@@ -43,7 +28,8 @@ def tokenize_jsonl(jsonl, tokenizer, entity2idx, relation2idx, max_seq_length=12
     attention_mask = list()
     
     for sent in jsonl["sentences"]:
-        encoded = tokenizer.encode_plus(sent, max_length=max_seq_length, pad_to_max_length=True, return_tensors='pt')
+        encoded = tokenizer.encode_plus(sent, max_length=max_seq_length, truncation=True,
+                                        padding='max_length', return_tensors='pt')
         input_ids_i = encoded["input_ids"]
         attention_mask_i = encoded["attention_mask"]
         
@@ -95,11 +81,11 @@ def tokenize_jsonl(jsonl, tokenizer, entity2idx, relation2idx, max_seq_length=12
     return features
 
 
-def load_tokenizer(model_dir, do_lower_case=False):
+def load_tokenizer(do_lower_case: bool = False):
     return BertTokenizer.from_pretrained(config.pretrained_model_dir, do_lower_case=do_lower_case)
 
 
-def create_features(jsonl_fname, tokenizer, output_fname, entity2idx, relation2idx,
+def create_features(jsonl_fname: str, tokenizer, output_fname, entity2idx, relation2idx,
                     max_seq_length=128, e1_tok="$", e2_tok="^", entity_start=False):
     jr = list(iter(JsonlReader(jsonl_fname)))
     features = list()
@@ -131,20 +117,22 @@ def create_features(jsonl_fname, tokenizer, output_fname, entity2idx, relation2i
     torch.save(features, output_fname)
 
 
-if __name__=="__main__":
-    tokenizer = load_tokenizer(config.pretrained_model_dir, config.do_lower_case)
+if __name__ == "__main__":
+    tokenizer = load_tokenizer(config.do_lower_case)
+
     entity2idx = read_entities(config.entities_file)
     relation2idx = read_relations(config.relations_file, with_dir=config.expand_rels)
+
     files = [
         (config.train_file, config.train_feats_file),
         (config.dev_file, config.dev_feats_file),
         (config.test_file, config.test_feats_file)
     ]
+
     for input_fname, output_fname in files:
         logger.info("Creating features for input `{}` ...".format(input_fname))
-        create_features(
-            input_fname, tokenizer, output_fname, entity2idx,
-            relation2idx, config.max_seq_length, 
-            entity_start=not config.entity_pool
-        )
+
+        create_features(input_fname, tokenizer, output_fname, entity2idx, relation2idx, config.max_seq_length,
+                        entity_start=not config.entity_pool)
+
         logger.info("Saved features at `{}` ...".format(output_fname))

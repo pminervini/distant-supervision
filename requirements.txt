@@ -1,1 +1,10 @@
 jsonlines
+tqdm
+typing
+torch
+transformers
+numpy
+scikit-learn
+nltk
+flashtext
+tensorboardX
