@@ -354,7 +354,6 @@ def save_eval_results(results, eval_dir, set_type, prefix=""):
 
 
 def load_dataset(set_type):
-    
     if set_type == "train":
         features_file = config.train_feats_file
     elif set_type == "dev":
@@ -378,6 +377,7 @@ def load_dataset(set_type):
     
     return dataset
 
+
 # cf. https://stackoverflow.com/a/480227
 def non_dup_ordered_seq(seq):
     seen = set()
@@ -393,7 +393,6 @@ def non_dup_ordered_seq(seq):
 
 
 def compute_metrics(logits, labels, groups, set_type, rel_dirs=None):
-    
     # Read relation mappings 
     rel2idx = read_relations(config.relations_file, config.expand_rels)
     idx2rel = {v:k for k, v in rel2idx.items()}
@@ -492,7 +491,8 @@ def main():
         model_to_save.save_pretrained(config.output_dir)
         
         # Load a trained model and vocabulary that you have fine-tuned
-        model = BertForDistantRE(BertConfig.from_pretrained(config.output_dir), num_labels, bag_attn=config.bag_attn)
+        pretrained_model = BertConfig.from_pretrained(config.output_dir)
+        model = BertForDistantRE(pretrained_model, num_labels, bag_attn=config.bag_attn)
         model.to(config.device)
     
     # Evaluation
@@ -500,11 +500,14 @@ def main():
     if config.do_eval:
         checkpoint = config.test_ckpt
         logger.info("Evaluate the checkpoint: %s", checkpoint)
-        
-        model = BertForDistantRE(BertConfig.from_pretrained(checkpoint), num_labels, bag_attn=config.bag_attn)
-        model.load_state_dict(torch.load(checkpoint + "/pytorch_model.bin"))
+
+        pretrained_model = BertConfig.from_pretrained(checkpoint)
+        model = BertForDistantRE(pretrained_model, num_labels, bag_attn=config.bag_attn)
+        model.load_state_dict(torch.load(checkpoint + "/pytorch_model.bin", map_location=config.device))
         model.to(config.device)
+
         result = evaluate(model, "test", prefix="TEST")
+
         global_step = ""
         result = dict((k + "_{}".format(global_step), v) for k, v in result.items())
         results.update(result)
@@ -514,5 +517,5 @@ def main():
     return results
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     main()

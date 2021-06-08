@@ -9,6 +9,8 @@ import pickle
 
 from clarify.ds.linking import ExactEntityLinking
 
+from clarify.ds.drugbank import DrugBankVocab
+
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -37,8 +39,7 @@ def link_sentences(linker: ExactEntityLinking, sents_fname: str, output_fname: s
 
 
 if __name__ == "__main__":
-    with open(config.drugbank_vocab_file, "rb") as rf:
-        uv = pickle.load(rf)
+    uv = DrugBankVocab.load(config.umls_vocab_file)
 
     # linker = ExactEntityLinking(uv.entity_text_to_cuis.keys(), config.case_sensitive_linker)
     linker = ExactEntityLinking(uv[2]["entity_text_to_cuis"].keys(), config.case_sensitive_linker)

@@ -18,8 +18,14 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 logger = logging.getLogger(__name__)
 
 
-def tokenize_jsonl(jsonl: Dict[str, Tuple[str, str]], tokenizer, entity2idx, relation2idx, max_seq_length=128,
-                   e1_tok: str = "$", e2_tok: str = "^", entity_start: bool = False):
+def tokenize_jsonl(jsonl: Dict[str, Tuple[str, str]],
+                   tokenizer: BertTokenizer,
+                   entity2idx: Dict[str, int],
+                   relation2idx: Dict[str, int],
+                   max_seq_length: int = 128,
+                   e1_tok: str = "$",
+                   e2_tok: str = "^",
+                   entity_start: bool = False):
     # Group
     src, tgt = jsonl["group"]
     relation = jsonl["relation"]
@@ -67,11 +73,11 @@ def tokenize_jsonl(jsonl: Dict[str, Tuple[str, str]], tokenizer, entity2idx, rel
     group = (entity2idx[src], entity2idx[tgt])
     
     features = [dict(
-        input_ids = torch.cat(input_ids),
-        entity_ids = torch.cat(entity_ids),
-        attention_mask = torch.cat(attention_mask),
-        label = relation2idx[relation],
-        group = group,
+        input_ids=torch.cat(input_ids),
+        entity_ids=torch.cat(entity_ids),
+        attention_mask=torch.cat(attention_mask),
+        label=relation2idx[relation],
+        group=group,
     ),]
     if config.expand_rels or not config.k_tag:
         # 0 = src "before" tgt; 1 = tgt "before" src
@@ -81,12 +87,19 @@ def tokenize_jsonl(jsonl: Dict[str, Tuple[str, str]], tokenizer, entity2idx, rel
     return features
 
 
-def load_tokenizer(do_lower_case: bool = False):
+def load_tokenizer(do_lower_case: bool = False) -> BertTokenizer:
     return BertTokenizer.from_pretrained(config.pretrained_model_dir, do_lower_case=do_lower_case)
 
 
-def create_features(jsonl_fname: str, tokenizer, output_fname, entity2idx, relation2idx,
-                    max_seq_length=128, e1_tok="$", e2_tok="^", entity_start=False):
+def create_features(jsonl_fname: str,
+                    tokenizer: BertTokenizer,
+                    output_fname: str,
+                    entity2idx: Dict[str, int],
+                    relation2idx: Dict[str, int],
+                    max_seq_length: int = 128,
+                    e1_tok: str = "$",
+                    e2_tok: str = "^",
+                    entity_start: bool = False):
     jr = list(iter(JsonlReader(jsonl_fname)))
     features = list()
     serial = False

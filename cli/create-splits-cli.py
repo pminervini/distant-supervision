@@ -25,6 +25,7 @@ if __name__ == "__main__":
     if os.path.exists(config.groups_linked_sents_file):
         pos_groups = set()
         neg_groups = set()
+
         logger.info("Reading groups linked file `{}` ...".format(config.groups_linked_sents_file))
         for jdata in JsonlReader(config.groups_linked_sents_file):
             pos_groups.update(jdata["groups"]["p"])
@@ -33,12 +34,23 @@ if __name__ == "__main__":
     else:
         # 1. Collect all possible group texts from their CUIs
         groups_texts = get_groups_texts_from_umls_vocab(uv)
+
+        # group_texts is a set of tab-separated surface form pairs,
+        # corresponding to CUI pairs appearing in the values of uv.relation_text_to_groups
+
         # 2. Search for text alignment of groups (this can take up to 80~90 mins)
+
+        # config.medline_linked_sents_file -> umls_linked_sentences.jsonl (list of {"sent": sentence, "matches": ..})
         pos_groups, neg_groups = align_groups_to_sentences(groups_texts, config.medline_linked_sents_file,
                                                            config.groups_linked_sents_file)
+        # config.groups_linked_sents_file -> linked_sentences_to_groups.jsonl
+        #   {"sent": .., "matches": .., "groups": {"p": ["a\tb", "c\td", ..], "n": ..}}
 
     # 3. From collected groups and pruning relations criteria, get final triples
     triples = pruned_triples(uv, pos_groups, neg_groups, config.min_rel_group, config.max_rel_group)
+
+    # triples: list of (s, p, o) triples, where entities and relation types are represented by their surface forms
+
     # 4. Collect evidences and filter triples based on sizes of collected bags
     triples, group_to_data = filter_triples_with_evidence(triples, config.bag_size, k_tag=config.k_tag,
                                                           expand_rels=config.expand_rels)
