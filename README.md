@@ -1,4 +1,4 @@
-# CLARIFY Distant Supervision Framework
+# CLARIFY -- Framework for Relation Extraction via Distant Supervision
 
 ## Data
 To run the code, please obtain the data as follows:

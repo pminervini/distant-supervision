@@ -3,6 +3,7 @@
 import os
 import torch
 
+
 DATA_DIR = "data"
 UMLS_DIR = os.path.join("data", "UMLS")
 MEDLINE_DIR = os.path.join("data", "MEDLINE")
