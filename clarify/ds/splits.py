@@ -8,12 +8,14 @@ import json
 import config
 import random
 
+from tqdm import tqdm
+
 from clarify.ds.umls import UMLSVocab
 from clarify.utils import JsonlReader
 
 from sklearn.model_selection import train_test_split
 
-from typing import Set, Tuple, List
+from typing import Set, Tuple, List, Dict, Any
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -21,22 +23,45 @@ logger = logging.getLogger(__name__)
 
 def get_groups_texts_from_umls_vocab(uv: UMLSVocab) -> Set[str]:
     groups = set()
+
+    # uv.relation_text_to_groups:
+    # sample key: "has_fusion"
+    # sample value: {('C4242584', 'C4254545'),
+    #  ('C4242584', 'C4254546'),
+    #  ('C4242683', 'C4242570'),
+    #  ('C4242683', 'C4242571'),
+    #  ('C4242704', 'C1268540'),
+    #  ('C4242704', 'C4242702'),
+    #  ('C4242704', 'C4242703')}
+
     for relation_text in uv.relation_text_to_groups:
         groups.update(uv.relation_text_to_groups[relation_text])
 
+    # groups now contains all entity pairs without mention of their relation type
+
     logger.info("Collecting all possible textual combinations of CUI groups ...")
+
     groups_texts = set()
     l = len(groups)
 
     for idx, (cui_src, cui_tgt) in enumerate(groups):
         if idx % 100000 == 0 and idx != 0:
             logger.info("Parsed {} groups of {}".format(idx, l))
+
+        # uv.cui_to_entity_texts:
+        # sample key: 'C5399742'
+        # sample value: {'Inactive Preparations by FDA Established Pharmacologic Class'}
+
         cui_src_texts = uv.cui_to_entity_texts[cui_src]
         cui_tgt_texts = uv.cui_to_entity_texts[cui_tgt]
+
         for cui_src_text_i in cui_src_texts:
             temp = list(zip([cui_src_text_i] * len(cui_tgt_texts), cui_tgt_texts))
             temp = ["\t".join(i) for i in temp]
             groups_texts.update(temp)
+
+        # group_texts will be like groups, but with surface form pairs instead of CUI pairs;
+        # also, each pair is not a Tuple[str, str], but it's a string with a \t separating the two surface forms
 
     # NOTE: this consumes a LOT of memory (~18 GB)! (clearing up memory takes around half an hour)
     logger.info("Collected {} unique tuples of (src_entity_text, tgt_entity_text) type.".format(len(groups_texts)))
@@ -123,11 +148,15 @@ def align_groups_to_sentences(groups_texts: Set[str], jsonl_fname: str, output_f
     return pos_groups, neg_groups
 
 
-def pruned_triples(uv, pos_groups, neg_groups, min_rel_group=10, max_rel_group=1500) -> List[Tuple[str, str, str]]:
+def pruned_triples(uv: UMLSVocab,
+                   pos_groups: Set[str],
+                   neg_groups: Set[str],
+                   min_rel_group: int = 10,
+                   max_rel_group: int = 1500) -> List[Tuple[str, str, str]]:
     logger.info("Mapping CUI groups to relations ...")
     group_to_relation_texts = collections.defaultdict(list)
 
-    for idx, (relation_text, groups) in enumerate(uv.relation_text_to_groups.items()):
+    for relation_text, groups in tqdm(uv.relation_text_to_groups.items()):
         for group in groups:
             group_to_relation_texts[group].append(relation_text)
 
@@ -217,12 +246,20 @@ def pruned_triples(uv, pos_groups, neg_groups, min_rel_group=10, max_rel_group=1
     return triples
 
 
-def filter_triples_with_evidence(triples, max_bag_size=32, k_tag=True, expand_rels=False):
+def filter_triples_with_evidence(triples: List[Tuple[str, str, str]],
+                                 max_bag_size: int = 32,
+                                 k_tag: bool = True,
+                                 expand_rels: bool = False) -> Tuple[Set[Tuple[str, str, str]], Dict[str, Dict[str, Any]]]:
     group_to_relation_texts = collections.defaultdict(set)
 
     for ei, rj, ek in triples:
         group = "{}\t{}".format(ei, ek)
         group_to_relation_texts[group].add(rj)
+
+    # group_to_relation_text: dict "source\ttarget" -> {'r1', 'r2', ..} (all in surface forms)
+
+    # config.groups_linked_sents_file -> linked_sentences_to_groups.jsonl
+    #   {"sent": .., "matches": .., "groups": {"p": ["a\tb", "c\td", ..], "n": ..}}
 
     jr = JsonlReader(config.groups_linked_sents_file)
 
@@ -234,6 +271,9 @@ def filter_triples_with_evidence(triples, max_bag_size=32, k_tag=True, expand_re
             logger.info("Processed {} lines for linking to triples".format(idx))
         common = candid_groups.intersection(jdata["groups"]["p"] + jdata["groups"]["n"])
 
+        # common: set of groups appearing either in "p" or "n"
+        #   note: "p" and "n" are two lists of tab-divided entity pairs
+
         if not common:
             continue
 
@@ -244,25 +284,20 @@ def filter_triples_with_evidence(triples, max_bag_size=32, k_tag=True, expand_re
             sent = jdata["sent"]
             sent = sent.replace("$", "")
             sent = sent.replace("^", "")
+            
+            # for each pair in common, annotate the source and the target entitiy in the sentence, based on the
+            # match coordinates
 
             # src entity mentioned before tgt entity
             if src_span[1] < tgt_span[0]:
-                sent = sent[:src_span[0]] + "$" + src + "$" + sent[src_span[1]:tgt_span[0]] + "^" + tgt + "^" + sent[
-                                                                                                                tgt_span[
-                                                                                                                    1]:]
+                sent = sent[:src_span[0]] + "$" + src + "$" + sent[src_span[1]:tgt_span[0]] + "^" + tgt + "^" + sent[tgt_span[1]:]
                 rel_dir = 1
             # tgt entity mentioned before src entity
             elif src_span[0] > tgt_span[1]:
                 if k_tag:
-                    sent = sent[:tgt_span[0]] + "^" + tgt + "^" + sent[
-                                                                  tgt_span[1]:src_span[0]] + "$" + src + "$" + sent[
-                                                                                                               src_span[
-                                                                                                                   1]:]
+                    sent = sent[:tgt_span[0]] + "^" + tgt + "^" + sent[tgt_span[1]:src_span[0]] + "$" + src + "$" + sent[src_span[1]:]
                 else:
-                    sent = sent[:tgt_span[0]] + "$" + tgt + "$" + sent[
-                                                                  tgt_span[1]:src_span[0]] + "^" + src + "^" + sent[
-                                                                                                               src_span[
-                                                                                                                   1]:]
+                    sent = sent[:tgt_span[0]] + "$" + tgt + "$" + sent[tgt_span[1]:src_span[0]] + "^" + src + "^" + sent[src_span[1]:]
                 rel_dir = -1
             # Should not happen, but to be on safe side
             else:
@@ -272,6 +307,8 @@ def filter_triples_with_evidence(triples, max_bag_size=32, k_tag=True, expand_re
                 group_to_data[group] = collections.defaultdict(list)
 
             group_to_data[group][rel_dir].append(sent)
+
+            # group_to_data -- group: rel_dir: annotated sentence
 
     # Adjust bag sizes
     new_group_to_data = dict()
@@ -353,7 +390,7 @@ def remove_overlapping_sents(train_lines, test_lines):
     return new_train_lines, new_triples
 
 
-def create_data_split(triples):
+def create_data_split(triples: Set[Tuple[str, str, str]]) -> Tuple[List[Tuple[str, str, str]], List[Tuple[str, str, str]], List[Tuple[str, str, str]]]:
     triples = list(triples)
     inds = list(range(len(triples)))
     y = [relation for _, relation, _ in triples]
@@ -373,7 +410,7 @@ def create_data_split(triples):
     return train_triples, dev_triples, test_triples
 
 
-def split_lines(triples, group_to_data):
+def split_lines(triples: List[Tuple[str, str, str]], group_to_data) -> List[Dict[str, Any]]:
     groups = set()
     for ei, _, ek in triples:
         groups.add("{}\t{}".format(ei, ek))

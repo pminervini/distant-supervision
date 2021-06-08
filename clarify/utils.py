@@ -50,7 +50,7 @@ def read_relations(relations_file: str, with_dir: bool = False) -> Dict[str, int
     return relation2idx
 
 
-def read_entities(entities_file) -> Dict[str, int]:
+def read_entities(entities_file: str) -> Dict[str, int]:
     entity2idx = dict()
     idx = 0
     with open(entities_file) as rf:

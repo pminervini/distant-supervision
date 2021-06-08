@@ -12,7 +12,7 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 logger = logging.getLogger(__name__)
 
 
-def iter_from_mrrel(mrrel_file: str, ro_only=False) -> Iterator[Tuple[str, Tuple[str, str], str], None, None]:
+def iter_from_mrrel(mrrel_file: str, ro_only=False) -> Iterator[Tuple[str, Tuple[str, str], str]]:
     """Reads UMLS relation triples file MRREL.RRF.
 
     Use ``ro_only`` to consider relations of "RO" semantic type only.
@@ -48,7 +48,7 @@ def iter_from_mrrel(mrrel_file: str, ro_only=False) -> Iterator[Tuple[str, Tuple
             yield e1_id, (rel_id, rel_text), e2_id
 
 
-def iter_from_mrconso(mrconso_file: str, en_only: bool = False) -> Iterator[Tuple[str, str], None, None]:
+def iter_from_mrconso(mrconso_file: str, en_only: bool = False) -> Iterator[Tuple[str, str]]:
     """Reads UMLS concept names file MRCONSO.RRF.
 
     Use ``en_only`` to read English concepts only.
