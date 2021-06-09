@@ -14,6 +14,10 @@ from clarify.utils import JsonlReader, read_entities, read_relations
 
 from typing import Dict, Tuple
 
+import torch.multiprocessing
+torch.multiprocessing.set_sharing_strategy('file_system')
+
+
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -34,10 +38,10 @@ def tokenize_jsonl(jsonl: Dict[str, Tuple[str, str]],
     attention_mask = list()
     
     for sent in jsonl["sentences"]:
-        encoded = tokenizer.encode_plus(sent, max_length=max_seq_length, truncation=True,
-                                        padding='max_length', return_tensors='pt')
-        input_ids_i = encoded["input_ids"]
-        attention_mask_i = encoded["attention_mask"]
+        encoded = tokenizer.encode_plus(sent, max_length=max_seq_length, return_tensors='pt', padding='max_length', truncation=True)
+
+        input_ids_i = encoded["input_ids"] # [..., :max_seq_length]
+        attention_mask_i = encoded["attention_mask"] # [..., :max_seq_length]
         
         entity_ids_i = torch.zeros(max_seq_length)
         
@@ -71,7 +75,7 @@ def tokenize_jsonl(jsonl: Dict[str, Tuple[str, str]],
         return []
     
     group = (entity2idx[src], entity2idx[tgt])
-    
+
     features = [dict(
         input_ids=torch.cat(input_ids),
         entity_ids=torch.cat(entity_ids),
@@ -119,7 +123,7 @@ def create_features(jsonl_fname: str,
             relation2idx=relation2idx, max_seq_length=max_seq_length, 
             e1_tok=e1_tok, e2_tok=e2_tok, entity_start=entity_start
         )
-        with ProcessPoolExecutor(max_workers=4) as executor:
+        with ProcessPoolExecutor(max_workers=8) as executor:
             for idx, features_idx in enumerate(executor.map(func, jr, chunksize=500)):
                 if idx % 10000 == 0 and idx != 0:
                     logger.info("Created {} features".format(idx))
