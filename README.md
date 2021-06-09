@@ -16,7 +16,7 @@ Download MEDLINE abstracts `medline_abs.txt` (~25GB) and place under `data/MEDLI
    - This will create `data/umls_vocab.pkl`.
 2. Run `python3 cli/extract-sentences-medline-cli.py`.
    - This will create `data/MEDLINE/medline_unique_sentences.txt`.
-3. Link entities with text: `python3 -m cli/link-umls-entities-cli.py`
+3. Link entities with text: `python3 cli/link-umls-entities-cli.py`
    - This will create `data/MEDLINE/umls_linked_sentences.jsonl`.
      Each entry in this file is a dict, with an entry `sent` containing the sentence, and an entry `matches`,
      containing entity names as keys, and start and end positions as value.

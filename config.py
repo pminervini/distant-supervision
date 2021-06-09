@@ -96,13 +96,13 @@ save_steps = 5000
 if bag_attn:
     config_name += ".bag_attn"
 
-config_name = 'umls_distant_re_ktag'
+# config_name = 'umls_distant_re_ktag'
 
 output_dir = os.path.join("models", config_name)
 os.makedirs(output_dir, exist_ok=True)
 
-# do_train = True
-do_train = False
+do_train = True
+# do_train = False
 
 do_eval = True
 test_ckpt = output_dir
