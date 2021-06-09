@@ -157,7 +157,7 @@ def pruned_triples(uv: UMLSVocab,
     group_to_relation_texts = collections.defaultdict(list)
 
     for relation_text, groups in tqdm(uv.relation_text_to_groups.items()):
-        for group in groups:
+        for group in tqdm(groups, leave=False):
             group_to_relation_texts[group].append(relation_text)
 
     logger.info("Mapping relations to groups texts ...")
