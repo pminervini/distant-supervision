@@ -17,7 +17,6 @@ from typing import Dict, Tuple
 import torch.multiprocessing
 torch.multiprocessing.set_sharing_strategy('file_system')
 
-
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -50,22 +49,22 @@ def tokenize_jsonl(jsonl: Dict[str, Tuple[str, str]],
             e1_start, e1_end = (input_ids_i[0] == tokenizer.vocab[e1_tok]).nonzero().flatten()
         except:
             return []
-        
+
         if entity_start:
             entity_ids_i[e1_start] = 1
         else:
             entity_ids_i[e1_start+1:e1_end] = 1
-        
+
         try:
             e2_start, e2_end = (input_ids_i[0] == tokenizer.vocab[e2_tok]).nonzero().flatten()
         except:
             return []
-        
+
         if entity_start:
             entity_ids_i[e2_start] = 2
-        else:   
+        else:
             entity_ids_i[e2_start+1:e2_end] = 2
-        
+
         input_ids.append(input_ids_i)
         entity_ids.append(entity_ids_i.unsqueeze(0))
         attention_mask.append(attention_mask_i)

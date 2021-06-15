@@ -4,6 +4,28 @@ import json
 
 from typing import Dict, Generator, Tuple, Any
 
+try:
+    from apex import amp  # noqa: F401
+
+    _has_apex = True
+except ImportError:
+    _has_apex = False
+
+try:
+    import torch_xla.core.xla_model as xm  # noqa: F401
+
+    _torch_tpu_available = True  # pylint: disable=
+except ImportError:
+    _torch_tpu_available = False
+
+
+def is_apex_available():
+    return _has_apex
+
+
+def is_torch_tpu_available():
+    return _torch_tpu_available
+
 
 class JsonlReader:
     def __init__(self, fname: str):

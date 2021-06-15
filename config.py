@@ -3,6 +3,8 @@
 import os
 import torch
 
+from clarify.utils import is_torch_tpu_available
+
 DATA_DIR = "data"
 UMLS_DIR = os.path.join("data", "UMLS")
 MEDLINE_DIR = os.path.join("data", "MEDLINE")
@@ -74,6 +76,12 @@ test_feats_file = os.path.join(FEATURES_DIR, "test.pt")
 # Training args
 cuda = True
 device = torch.device("cuda" if torch.cuda.is_available() and cuda else "cpu")
+
+if is_torch_tpu_available() and not cuda:
+    import torch_xla.core.xla_model as xm
+    torch.set_default_tensor_type('torch.FloatTensor')
+    device = xm.xla_device()
+
 n_gpu = 0 if not cuda else torch.cuda.device_count()
 
 per_gpu_train_batch_size = 2 # 4
