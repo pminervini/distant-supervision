@@ -47,6 +47,13 @@ def set_seed():
     if config.n_gpu > 0:
         torch.cuda.manual_seed_all(seed)
 
+def add_logging_handlers(logger, dir_name):
+    log_file = os.path.join(dir_name, "run.log")
+    fh = logging.FileHandler(log_file)
+    fh.setFormatter(logging.Formatter(
+        '%(asctime)s - %(levelname)s - %(name)s -   %(message)s', '%m/%d/%Y %H:%M:%S'
+    ))
+    logger.addHandler(fh)
 
 class AverageMeter(object):
     """
@@ -475,6 +482,8 @@ def main():
     pretrained_model = BertConfig.from_pretrained(config.pretrained_model_dir)
     model = BertForDistantRE(pretrained_model, num_labels, bag_attn=config.bag_attn)
     model = model.to(config.device)
+
+    add_logging_handlers(logger, config.output_dir)
     
     # Training
     if config.do_train:
