@@ -77,7 +77,7 @@ test_feats_file = os.path.join(FEATURES_DIR, "test.pt")
 cuda = True
 device = torch.device("cuda" if torch.cuda.is_available() and cuda else "cpu")
 
-if is_torch_tpu_available() and not cuda:
+if is_torch_tpu_available():
     import torch_xla.core.xla_model as xm
     torch.set_default_tensor_type('torch.FloatTensor')
     device = xm.xla_device()
