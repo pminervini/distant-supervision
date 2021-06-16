@@ -111,10 +111,10 @@ def train(train_dataset, model):
     scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=warmup_steps, num_training_steps=t_total)
     
     if config.checkpoint is not None:
-        model.load_state_dict(torch.load(config.checkpoint + "/pytorch_model.bin", map_location=config.device))
+        model.load_state_dict(torch.load(config.checkpoint + "/pytorch_model.bin").to(config.device))
         # Load in optimizer and scheduler states
-        optimizer.load_state_dict(torch.load(config.checkpoint + "/optimizer.pt", map_location=config.device))
-        scheduler.load_state_dict(torch.load(config.checkpoint + "/scheduler.pt", map_location=config.device))
+        optimizer.load_state_dict(torch.load(config.checkpoint + "/optimizer.pt").to(config.device))
+        scheduler.load_state_dict(torch.load(config.checkpoint + "/scheduler.pt").to(config.device))
         _, ckpt_global = os.path.split(config.checkpoint)[1].split("-")
         ckpt_global = int(ckpt_global)
     else:
@@ -373,7 +373,7 @@ def load_dataset(set_type):
         features_file = config.test_feats_file
     
     logger.info("Loading features from cached file %s", features_file)
-    features = torch.load(features_file, map_location=config.device)
+    features = torch.load(features_file).to(config.device)
     
     all_input_ids = torch.cat([f["input_ids"].unsqueeze(0) for f in features]).long()
     all_entity_ids = torch.cat([f["entity_ids"].unsqueeze(0) for f in features]).long()
@@ -516,7 +516,7 @@ def main():
 
         pretrained_model = BertConfig.from_pretrained(checkpoint)
         model = BertForDistantRE(pretrained_model, num_labels, bag_attn=config.bag_attn)
-        model.load_state_dict(torch.load(checkpoint + "/pytorch_model.bin", map_location=config.device))
+        model.load_state_dict(torch.load(checkpoint + "/pytorch_model.bin").to(config.device))
         model = model.to(config.device)
 
         result = evaluate(model, "test", prefix="TEST")
