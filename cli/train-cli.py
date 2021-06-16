@@ -116,6 +116,7 @@ def train(train_dataset, model):
     # multi-gpu training (should be after apex fp16 initialization)
     if config.n_gpu > 1:
         model = torch.nn.DataParallel(model)
+        model.to(config.device)
     
     # Train!
     logger.info("***** Running training *****")
@@ -154,6 +155,9 @@ def train(train_dataset, model):
                 "is_train": True
             }
             outputs = model(**inputs)
+
+            print([x.device for x in model.parameters()])
+
             loss = outputs[0]  
             logits = outputs[1]
             
