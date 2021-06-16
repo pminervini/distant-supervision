@@ -474,7 +474,7 @@ def main():
 
     pretrained_model = BertConfig.from_pretrained(config.pretrained_model_dir)
     model = BertForDistantRE(pretrained_model, num_labels, bag_attn=config.bag_attn)
-    model.to(config.device)
+    model = model.to(config.device)
     
     # Training
     if config.do_train:
@@ -497,7 +497,7 @@ def main():
         # Load a trained model and vocabulary that you have fine-tuned
         pretrained_model = BertConfig.from_pretrained(config.output_dir)
         model = BertForDistantRE(pretrained_model, num_labels, bag_attn=config.bag_attn)
-        model.to(config.device)
+        model = model.to(config.device)
     
     # Evaluation
     results = {}
@@ -508,7 +508,7 @@ def main():
         pretrained_model = BertConfig.from_pretrained(checkpoint)
         model = BertForDistantRE(pretrained_model, num_labels, bag_attn=config.bag_attn)
         model.load_state_dict(torch.load(checkpoint + "/pytorch_model.bin", map_location=config.device))
-        model.to(config.device)
+        model = model.to(config.device)
 
         result = evaluate(model, "test", prefix="TEST")
 
