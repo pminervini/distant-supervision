@@ -82,6 +82,8 @@ if is_torch_tpu_available() and not cuda:
     torch.set_default_tensor_type('torch.FloatTensor')
     device = xm.xla_device()
 
+print(f'Device: {device}')
+
 n_gpu = 0 if not cuda else torch.cuda.device_count()
 
 per_gpu_train_batch_size = 2 # 4
