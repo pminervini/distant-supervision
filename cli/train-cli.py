@@ -93,8 +93,10 @@ class AverageMeter(object):
 def train(train_dataset, model):
     tb_writer = SummaryWriter()
     train_batch_size = config.per_gpu_train_batch_size * max(1, config.n_gpu)
+    
     train_sampler = RandomSampler(train_dataset)
     train_dataloader = DataLoader(train_dataset, sampler=train_sampler, batch_size=train_batch_size)
+    
     t_total = min(len(train_dataloader) // config.gradient_accumulation_steps * config.num_train_epochs, 75000)
     
     # Prepare optimizer and schedule (linear warmup and decay)
@@ -112,6 +114,8 @@ def train(train_dataset, model):
     
     if config.checkpoint is not None:
         model.load_state_dict(torch.load(config.checkpoint + "/pytorch_model.bin"))
+        model = model.to(config.device)
+        
         # Load in optimizer and scheduler states
         optimizer.load_state_dict(torch.load(config.checkpoint + "/optimizer.pt"))
         scheduler.load_state_dict(torch.load(config.checkpoint + "/scheduler.pt"))
@@ -515,6 +519,7 @@ def main():
 
         pretrained_model = BertConfig.from_pretrained(checkpoint)
         model = BertForDistantRE(pretrained_model, num_labels, bag_attn=config.bag_attn)
+
         model.load_state_dict(torch.load(checkpoint + "/pytorch_model.bin"))
         model = model.to(config.device)
 
