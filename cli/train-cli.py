@@ -163,8 +163,6 @@ def train(train_dataset, model):
             }
             outputs = model(**inputs)
 
-            # print([x.device for x in model.parameters()])
-
             loss = outputs[0]  
             logits = outputs[1]
             
@@ -298,6 +296,7 @@ def evaluate(model, set_type="dev", prefix=""):
     # multi-gpu eval
     if config.n_gpu > 1 and not isinstance(model, torch.nn.DataParallel):
         model = torch.nn.DataParallel(model)
+        model = model.to(config.device)
     
     # Eval!
     logger.info("***** Running evaluation {} *****".format(prefix))
@@ -386,8 +385,6 @@ def load_dataset(set_type):
     else:
         dataset = TensorDataset(all_input_ids, all_entity_ids, all_attention_mask, all_groups, all_labels) 
     
-    dataset = dataset.to(config.device)
-
     return dataset
 
 
