@@ -156,7 +156,7 @@ def train(train_dataset, model):
             }
             outputs = model(**inputs)
 
-            print([x.device for x in model.parameters()])
+            # print([x.device for x in model.parameters()])
 
             loss = outputs[0]  
             logits = outputs[1]
